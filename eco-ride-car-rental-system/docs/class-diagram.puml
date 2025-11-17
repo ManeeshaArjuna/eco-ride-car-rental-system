@@ -1,0 +1,128 @@
+@startuml
+' Replace K1234567 with your actual KU student ID before exporting the image
+title EcoRide Car Rental System (UML-aligned to brief)
+
+class K1234567_Category {
+  -name: String
+  -dailyRentalFee: BigDecimal
+  -freeKmPerDay: int
+  -extraKmCharge: BigDecimal
+  -taxRate: BigDecimal
+  +getters()
+}
+
+enum K1234567_AvailabilityStatus {
+  AVAILABLE
+  RESERVED
+  UNDER_MAINTENANCE
+}
+
+enum K1234567_BookingStatus {
+  ACTIVE
+  CANCELLED
+  COMPLETED
+}
+
+abstract class K1234567_Vehicle {
+  -vehicleId: String
+  -model: String
+  -category: K1234567_Category
+  -availabilityStatus: K1234567_AvailabilityStatus
+  +checkAvailability(): boolean
+  +markReserved(): void
+  +markAvailable(): void
+}
+
+class K1234567_HybridCar extends K1234567_Vehicle {
+  -batteryCapacity: double
+  -fuelEfficiency: double
+  +displayHybridDetails(): void
+}
+
+class K1234567_ElectricCar extends K1234567_Vehicle {
+  -batteryCapacity: double
+  -chargingTime: double
+  +displayElectricDetails(): void
+}
+
+class K1234567_LuxurySUVCar extends K1234567_Vehicle {
+  -luxuryFeatures: String
+  -driverIncluded: boolean
+  +displayLuxuryDetails(): void
+}
+
+abstract class K1234567_Customer {
+  -customerId: String  <<NIC/Passport>>
+  -name: String
+  -contact: String
+  -email: String
+}
+
+class K1234567_LocalCustomer extends K1234567_Customer {
+  -nicNumber: String
+  +verifyNIC(): boolean
+}
+
+class K1234567_ForeignCustomer extends K1234567_Customer {
+  -passportNumber: String
+  -nationality: String
+  +verifyPassport(): boolean
+}
+
+class K1234567_Booking {
+  -bookingId: String
+  -bookingDate: LocalDateTime
+  -startDate: LocalDate
+  -endDate: LocalDate
+  -totalKm: int
+  -deposit: BigDecimal
+  -status: K1234567_BookingStatus
+  +rentalDays(): int
+  +calculateBasePrice(): BigDecimal
+  +calculateExtraKmCharge(): BigDecimal
+  +calculateDiscount(): BigDecimal
+  +calculateTax(): BigDecimal
+  +calculateFinalAmount(): BigDecimal
+  +confirmBooking(): void
+  +cancelBooking(): void
+}
+
+class K1234567_Invoice {
+  -invoiceId: String
+  -createdAt: LocalDateTime
+  -basePrice: BigDecimal
+  -extraKmCharge: BigDecimal
+  -discount: BigDecimal
+  -tax: BigDecimal
+  -depositDeducted: BigDecimal
+  -finalPayable: BigDecimal
+  +toString(): String
+}
+
+class K1234567_Payment {
+  -paymentId: String
+  -amount: BigDecimal
+  -method: String
+  -status: String
+  +processPayment(): boolean
+  +processRefund(): boolean
+}
+
+class K1234567_CarRentalSystem {
+  -vehicles: List<K1234567_Vehicle>
+  -customers: List<K1234567_Customer>
+  -bookings: List<K1234567_Booking>
+  +addVehicle(v: K1234567_Vehicle): void
+  +addCustomer(c: K1234567_Customer): void
+  +addBooking(b: K1234567_Booking): void
+  +findBookingById(id: String): K1234567_Booking
+  +searchBookingsByNameOrId(q: String): List<K1234567_Booking>
+  +viewBookingsByDate(d: LocalDate): List<K1234567_Booking>
+  +generateInvoice(b: K1234567_Booking): K1234567_Invoice
+}
+
+K1234567_Booking "1" --> "1" K1234567_Customer
+K1234567_Booking "1" --> "1" K1234567_Vehicle
+K1234567_Invoice "1" --> "1" K1234567_Booking
+
+@enduml
