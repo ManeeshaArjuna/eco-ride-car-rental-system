@@ -17,7 +17,7 @@ Default admin logging credentials
 ## Run
 ```bash
 mvn -q clean package
-mvn -q exec:java        # or: java -jar target/ecoride-console-uml-1.0.0-shaded.jar
+mvn -q exec:java
 mvn -q test
 ```
 
