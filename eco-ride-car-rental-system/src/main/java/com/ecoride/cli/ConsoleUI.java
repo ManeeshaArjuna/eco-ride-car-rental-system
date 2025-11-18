@@ -25,6 +25,7 @@ public class ConsoleUI {
     private static final String RED          = "\u001B[31m";
     private static final String NAVY_BLUE = "\u001B[34m";
     private static final String GREY         = "\u001B[90m";
+    private static final String BOLD         = "\u001B[1m";
     private static final String BELL         = "\u0007";
 
     private static final String ICON_OK      = "✔";
@@ -249,46 +250,41 @@ public class ConsoleUI {
         return ok;
     }
 
-    // ============================================================
-    // CUSTOMER REGISTRATION
-    // ============================================================
     private void registerCustomer(Scanner sc) {
-        printHeader("REGISTER CUSTOMER", ICON_USER);
+        System.out.println();
+        System.out.println(YELLOW + "=============================================" + RESET);
+        System.out.println(BOLD + "REGISTER CUSTOMER" + RESET);
+        System.out.println(YELLOW + "=============================================" + RESET);
 
-        System.out.println("Customer type: " + CYAN + "1) Local  2) Foreign" + RESET);
+        System.out.println(CYAN + "Customer type: 1) Local  2) Foreign" + RESET);
         String type;
 
         while (true) {
-            System.out.print("Choose (1 or 2): ");
+            System.out.print(CYAN + "Choose (1 or 2): " + RESET);
             type = readInput(sc);
 
-            if (type.equals("1") || type.equals("2"))
+            if (type.equals("1") || type.equals("2")) {
                 break;
-
-            printError("Invalid choice! Enter 1 for Local or 2 for Foreign.");
+            }
+            System.out.println(RED + "❌ Invalid choice! Enter 1 for Local or 2 for Foreign." + RESET);
         }
 
-        System.out.print("Name: ");
-        String name = readInput(sc);
-        System.out.print("Contact number: ");
-        String contact = readInput(sc);
-        System.out.print("Email: ");
-        String email = readInput(sc);
+        String name     = askName(sc);
+        String contact  = askContact(sc);
+        String email    = askEmail(sc);
 
-        if (type.equals("1")) {
-            System.out.print("NIC: ");
-            String nic = readInput(sc);
+        if ("1".equals(type)) {
+            String nic = askNIC(sc);
             system.addCustomer(new LocalCustomer(nic, name, contact, email));
         } else {
-            System.out.print("Passport: ");
-            String pass = readInput(sc);
-            System.out.print("Nationality: ");
-            String nat = readInput(sc);
+            String pass = askPassport(sc);
+            String nat  = askNationality(sc);
             system.addCustomer(new ForeignCustomer(pass, nat, name, contact, email));
         }
 
-        printSuccess("Customer registered successfully!");
+        System.out.println(GREEN + "✔ Customer registered successfully!" + RESET);
     }
+
 
     // ============================================================
     // VEHICLE MANAGEMENT
@@ -755,4 +751,87 @@ public class ConsoleUI {
             );
         }
     }
+
+    // ===============================
+    // VALIDATED INPUT HELPERS
+    // ===============================
+    private String askName(Scanner sc) {
+        while (true) {
+            System.out.print(CYAN + "Name: " + RESET);
+            String name = readInput(sc);
+
+            if (!name.matches("[A-Za-z ]+")) {
+                System.out.println(RED + "❌ Invalid name! Only letters and spaces are allowed." + RESET);
+                continue;
+            }
+            return name;
+        }
+    }
+
+    private String askContact(Scanner sc) {
+        while (true) {
+            System.out.print(CYAN + "Contact number (10 digits): " + RESET);
+            String contact = readInput(sc);
+
+            if (!contact.matches("\\d{10}")) {
+                System.out.println(RED + "❌ Invalid contact! Please enter exactly 10 digits." + RESET);
+                continue;
+            }
+            return contact;
+        }
+    }
+
+    private String askEmail(Scanner sc) {
+        while (true) {
+            System.out.print(CYAN + "Email: " + RESET);
+            String email = readInput(sc);
+
+            if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+                System.out.println(RED + "❌ Invalid email format! Example: user@example.com" + RESET);
+                continue;
+            }
+            return email;
+        }
+    }
+
+    private String askNIC(Scanner sc) {
+        while (true) {
+            System.out.print(CYAN + "NIC: " + RESET);
+            String nic = readInput(sc);
+
+            // Old: 9 digits + V/v/X/x   |  New: 12 digits
+            if (!nic.matches("^[0-9]{9}[vVxX]$") && !nic.matches("^[0-9]{12}$")) {
+                System.out.println(RED + "❌ Invalid NIC! Use 9 digits + V/X or 12 digits." + RESET);
+                continue;
+            }
+            return nic;
+        }
+    }
+
+    private String askPassport(Scanner sc) {
+        while (true) {
+            System.out.print(CYAN + "Passport: " + RESET);
+            String pass = readInput(sc);
+
+            if (!pass.matches("^[A-Z0-9]{6,12}$")) {
+                System.out.println(RED + "❌ Invalid passport! Use 6–12 characters (A–Z, 0–9)." + RESET);
+                continue;
+            }
+            return pass;
+        }
+    }
+
+    private String askNationality(Scanner sc) {
+        while (true) {
+            System.out.print(CYAN + "Nationality: " + RESET);
+            String nat = readInput(sc);
+
+            if (!nat.matches("^[A-Za-z ]+$")) {
+                System.out.println(RED + "❌ Invalid nationality! Only letters and spaces are allowed." + RESET);
+                continue;
+            }
+            return nat;
+        }
+    }
+
 }
