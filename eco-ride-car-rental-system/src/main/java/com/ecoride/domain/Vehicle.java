@@ -3,10 +3,10 @@ package com.ecoride.domain;
 import java.util.Objects;
 
 public abstract class Vehicle {
-    private String vehicleId;
-    private String model;
-    private Category category;
-    private AvailabilityStatus availabilityStatus;
+    protected String vehicleId;
+    protected String model;
+    protected Category category;
+    protected AvailabilityStatus availabilityStatus;
 
     protected Vehicle(String vehicleId, String model, Category category, AvailabilityStatus status) {
         this.vehicleId = vehicleId;

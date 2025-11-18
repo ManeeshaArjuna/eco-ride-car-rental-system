@@ -1,10 +1,10 @@
 package com.ecoride.domain;
 
 public abstract class Customer {
-    private String customerId; // NIC or Passport
-    private String name;
-    private String contact;
-    private String email;
+    protected String customerId; // NIC or Passport
+    protected String name;
+    protected String contact;
+    protected String email;
 
     protected Customer(String customerId, String name, String contact, String email) {
         this.customerId = customerId;
