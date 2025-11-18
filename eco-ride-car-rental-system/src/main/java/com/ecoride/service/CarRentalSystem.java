@@ -82,10 +82,24 @@ public class CarRentalSystem {
         Booking b = bookingRepo.findById(bookingId).orElseThrow(() -> new IllegalArgumentException("Booking not found"));
         policy.ensureCanAmendOrCancel(b);
         if (newStart != null) {
-            policy.ensureCanBook(b.getVehicle(), newStart);
+
+            // Allow update if the only conflict is the SAME booking
+            boolean conflict =
+                bookingRepo.findAll().stream()
+                    .filter(x -> !x.getBookingId().equals(bookingId)) // exclude this booking
+                    .anyMatch(x -> x.getVehicle().getVehicleId().equals(b.getVehicle().getVehicleId()) &&
+                                x.getStatus() == BookingStatus.ACTIVE &&
+                                !newStart.isAfter(x.getEndDate()) &&
+                                !newStart.isBefore(x.getStartDate()));
+
+            if (conflict) {
+                throw new IllegalArgumentException("Vehicle is not available on the selected new start date.");
+            }
+
+            // Now safe to update
             b.setStartDate(newStart);
             int days = newDays != null ? newDays : b.rentalDays();
-            b.setEndDate(newStart.plusDays(days-1));
+            b.setEndDate(newStart.plusDays(days - 1));
         }
         if (newDays != null && newStart == null) {
             b.setEndDate(b.getStartDate().plusDays(newDays-1));
