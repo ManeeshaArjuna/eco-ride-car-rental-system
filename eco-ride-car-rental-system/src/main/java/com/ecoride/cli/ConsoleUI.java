@@ -7,15 +7,67 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Optional;
+import java.util.Scanner;
 
 public class ConsoleUI {
 
     private final CarRentalSystem system;
 
+    // ============================================================
+    // COLOR & ICON CONSTANTS (Theme A - Eco Green)
+    // ============================================================
+    private static final String RESET        = "\u001B[0m";
+    private static final String GREEN        = "\u001B[32m";
+    private static final String BRIGHT_GREEN = "\u001B[92m";
+    private static final String YELLOW       = "\u001B[33m";
+    private static final String CYAN         = "\u001B[36m";
+    private static final String RED          = "\u001B[31m";
+    private static final String NAVY_BLUE = "\u001B[34m";
+    private static final String GREY         = "\u001B[90m";
+    private static final String BELL         = "\u0007";
+
+    private static final String ICON_OK      = "✔";
+    private static final String ICON_ERR     = "❌";
+    private static final String ICON_WARN    = "⚠";
+    private static final String ICON_HOME    = "🏠";
+    private static final String ICON_USER    = "👤";
+    private static final String ICON_CAR     = "🚗";
+    private static final String ICON_BOOKING = "📅";
+    private static final String ICON_INVOICE = "🧾";
+    private static final String ICON_KEY     = "🔑";
+
     public ConsoleUI(CarRentalSystem system) {
         this.system = system;
+    }
+
+    // ============================================================
+    // SMALL UI HELPERS
+    // ============================================================
+    private void printHeader(String title, String icon) {
+        String line = GREEN + "==================================================" + RESET;
+        System.out.println();
+        System.out.println(line);
+        System.out.println(BRIGHT_GREEN + icon + " " + title + RESET);
+        System.out.println(line);
+    }
+
+    private void printSectionTitle(String title) {
+        System.out.println();
+        System.out.println(NAVY_BLUE + "---- " + title + " ----" + RESET);
+
+    }
+
+    private void printError(String msg) {
+        System.out.println(RED + ICON_ERR + " " + msg + RESET + BELL);
+    }
+
+    private void printWarn(String msg) {
+        System.out.println(YELLOW + ICON_WARN + " " + msg + RESET);
+    }
+
+    private void printSuccess(String msg) {
+        System.out.println(BRIGHT_GREEN + ICON_OK + " " + msg + RESET);
     }
 
     // ============================================================
@@ -25,7 +77,7 @@ public class ConsoleUI {
         String input = sc.nextLine().trim();
 
         if (input.equals("#")) {
-            System.out.println("↩ Returning to main menu...");
+            System.out.println(YELLOW + ICON_HOME + " Returning to main menu..." + RESET);
             System.out.println();
             throw new RuntimeException("BACK_TO_HOME");
         }
@@ -37,19 +89,18 @@ public class ConsoleUI {
     // ============================================================
     private String askValidBookingId(Scanner sc) {
         while (true) {
-            System.out.print("Booking ID (e.g., R-ca4a1d44): ");
+            System.out.print(CYAN + "Booking ID " + RESET + "(e.g., R-ca4a1d44): ");
             String id = readInput(sc);
 
-            // Validate exact pattern: R- followed by 8 hex lowercase chars
             if (!id.matches("R-[0-9a-f]{8}")) {
-                System.out.println("❌ Invalid Booking ID format! Expected format: R-xxxxxxxx");
+                printError("Invalid Booking ID format! Expected: R-xxxxxxxx");
                 continue;
             }
 
             Optional<Booking> booking = system.findBookingById(id);
 
             if (booking.isEmpty()) {
-                System.out.println("❌ No booking found with ID: " + id);
+                printError("No booking found with ID: " + id);
                 continue;
             }
 
@@ -62,11 +113,11 @@ public class ConsoleUI {
     // ============================================================
     private String askValidVehicleId(Scanner sc) {
         while (true) {
-            System.out.print("Vehicle ID (e.g., C-001): ");
+            System.out.print(CYAN + "Vehicle ID " + RESET + "(e.g., C-001): ");
             String vid = readInput(sc);
 
             if (!vid.matches("C-\\d{3}")) {
-                System.out.println("❌ Invalid ID format! Expected: C-001");
+                printError("Invalid Vehicle ID format! Expected: C-001");
                 continue;
             }
 
@@ -74,7 +125,7 @@ public class ConsoleUI {
                     .anyMatch(v -> v.getVehicleId().equals(vid));
 
             if (!exists) {
-                System.out.println("❌ Vehicle not found: " + vid);
+                printError("Vehicle not found: " + vid);
                 continue;
             }
 
@@ -83,15 +134,10 @@ public class ConsoleUI {
     }
 
     // ============================================================
-    // MAIN LOOP
+    // MAIN LOOP WITH ANIMATED WELCOME
     // ============================================================
     public void start() {
-        System.out.println();
-        System.out.println("===============================================");
-        System.out.println("|=== Welcome to EcoRide Car Rental System ===|");
-        System.out.println("===============================================");
-        System.out.println("Developed by Maneesha Arjuna - ESOFT UNI KANDY");
-        System.out.println("-----------------------------------------------");
+        showWelcomeScreen();
 
         Scanner sc = new Scanner(System.in);
 
@@ -103,7 +149,9 @@ public class ConsoleUI {
 
                 switch (choice) {
                     case "1" -> registerCustomer(sc);
-                    case "2" -> { if (requireAdmin(sc)) vehicleManagement(sc); }
+                    case "2" -> {
+                        if (requireAdmin(sc)) vehicleManagement(sc);
+                    }
                     case "3" -> makeBooking(sc);
                     case "4" -> updateBooking(sc);
                     case "5" -> cancelBooking(sc);
@@ -111,28 +159,78 @@ public class ConsoleUI {
                     case "7" -> viewBookingsByDate(sc);
                     case "8" -> completeAndInvoice(sc);
                     case "9" -> listVehicles();
-                    case "0" -> { System.out.println("Goodbye!"); return; }
-                    default -> System.out.println("Invalid option.");
+                    case "0" -> {
+                        System.out.println(GREY + "Thank you for using EcoRide. Goodbye!" + RESET);
+                        return;
+                    }
+                    default -> printError("Invalid option. Please choose from the menu.");
                 }
 
             } catch (RuntimeException ex) {
                 if ("BACK_TO_HOME".equals(ex.getMessage()))
                     continue;
-
-                System.out.println("Error: " + ex.getMessage());
+                printError("Unexpected error: " + ex.getMessage());
             }
         }
+    }
+
+    private void showWelcomeScreen() {
+        System.out.println();
+        System.out.println(GREEN + "==================================================" + RESET);
+        System.out.println(BRIGHT_GREEN + "      " + ICON_CAR + "  EcoRide Car Rental System  " + ICON_CAR + RESET);
+        System.out.println(GREEN + "==================================================" + RESET);
+        System.out.println(GREY + "Developed by Maneesha Arjuna - ESOFT UNI KANDY" + RESET);
+        System.out.print(GREEN + "Loading" + RESET);
+
+        // simple animated loading
+        try {
+            for (int i = 0; i < 3; i++) {
+                Thread.sleep(300);
+                System.out.print(GREEN + "." + RESET);
+            }
+        } catch (InterruptedException ignored) {
+            // ignore
+        }
+        System.out.println();
+        System.out.println(GREY + "(Hint: You can type '#' at any time to go back to the main menu.)" + RESET);
+    }
+
+    // ============================================================
+    // MAIN MENU
+    // ============================================================
+    private void printMenu() {
+        System.out.println();
+        System.out.println(GREEN + "---------------- MAIN MENU ----------------" + RESET);
+        System.out.println(NAVY_BLUE + "1)" + RESET + " " + ICON_USER    + " Register customer");
+
+        System.out.println(NAVY_BLUE + "2)" + RESET + " " + ICON_CAR     + " Vehicle management (Admin)");
+
+        System.out.println(NAVY_BLUE + "3)" + RESET + " " + ICON_BOOKING + " Book car");
+
+        System.out.println(NAVY_BLUE + "4)" + RESET + " " + ICON_BOOKING + " Update booking (<= 2 days)");
+
+        System.out.println(NAVY_BLUE + "5)" + RESET + " " + ICON_BOOKING + " Cancel booking (<= 2 days)");
+
+        System.out.println(NAVY_BLUE + "6)" + RESET + " 🔍 Search bookings");
+
+        System.out.println(NAVY_BLUE + "7)" + RESET + " " + ICON_BOOKING + " View bookings by start date");
+
+        System.out.println(NAVY_BLUE + "8)" + RESET + " " + ICON_INVOICE + " Complete booking & generate invoice");
+
+        System.out.println(NAVY_BLUE + "9)" + RESET + " " + ICON_CAR     + " List vehicles");
+
+        System.out.println(NAVY_BLUE + "0)" + RESET + " Exit");
+
+        System.out.println(GREY + "(Tip: Enter '#' anytime to return to main menu)" + RESET);
+        System.out.print(NAVY_BLUE + "Choose: " + RESET);
+
     }
 
     // ============================================================
     // ADMIN AUTH
     // ============================================================
     private boolean requireAdmin(Scanner sc) {
-        System.out.println();
-        System.out.println("---------------------------------------------");
-        System.out.println("|       Admin authentication required       |");
-        System.out.println("---------------------------------------------");
-        System.out.println();
+        printHeader("ADMIN LOGIN", ICON_KEY);
 
         System.out.print("Admin ID: ");
         String id = readInput(sc);
@@ -142,42 +240,22 @@ public class ConsoleUI {
 
         boolean ok = system.authenticateAdmin(id, pwd);
 
-        if (!ok) System.out.println("Access denied: invalid credentials.");
+        if (!ok) {
+            printError("Access denied: invalid admin credentials.");
+        } else {
+            printSuccess("Admin authenticated.");
+        }
 
         return ok;
-    }
-
-    private void printMenu() {
-        System.out.println();
-        System.out.println("---------------------------------------------");
-        System.out.println("|=== EcoRide Car Rental System (Console) ===|");
-        System.out.println("---------------------------------------------");
-        System.out.println();
-        System.out.println("1) Register customer");
-        System.out.println("2) Vehicle management");
-        System.out.println("3) Book car");
-        System.out.println("4) Update booking (<= 2 days)");
-        System.out.println("5) Cancel booking (<= 2 days)");
-        System.out.println("6) Search bookings");
-        System.out.println("7) View bookings by start date");
-        System.out.println("8) Complete booking & generate invoice");
-        System.out.println("9) List vehicles");
-        System.out.println("0) Exit");
-        System.out.println("(Tip: Enter '#' anytime to return to main menu)");
-        System.out.println();
-        System.out.print("Choose: ");
     }
 
     // ============================================================
     // CUSTOMER REGISTRATION
     // ============================================================
     private void registerCustomer(Scanner sc) {
-        System.out.println();
-        System.out.println("=============================================");
-        System.out.println("REGISTER CUSTOMER");
-        System.out.println("=============================================");
+        printHeader("REGISTER CUSTOMER", ICON_USER);
 
-        System.out.println("Customer type: 1) Local  2) Foreign");
+        System.out.println("Customer type: " + CYAN + "1) Local  2) Foreign" + RESET);
         String type;
 
         while (true) {
@@ -187,7 +265,7 @@ public class ConsoleUI {
             if (type.equals("1") || type.equals("2"))
                 break;
 
-            System.out.println("❌ Invalid choice! Enter 1 or 2.");
+            printError("Invalid choice! Enter 1 for Local or 2 for Foreign.");
         }
 
         System.out.print("Name: ");
@@ -209,7 +287,7 @@ public class ConsoleUI {
             system.addCustomer(new ForeignCustomer(pass, nat, name, contact, email));
         }
 
-        System.out.println("✔ Customer registered successfully!");
+        printSuccess("Customer registered successfully!");
     }
 
     // ============================================================
@@ -217,32 +295,33 @@ public class ConsoleUI {
     // ============================================================
     private void vehicleManagement(Scanner sc) {
         while (true) {
-            System.out.println();
-            System.out.println("=============================================");
-            System.out.println("VEHICLE MANAGEMENT");
-            System.out.println("=============================================");
+            printHeader("VEHICLE MANAGEMENT", ICON_CAR);
+
             System.out.println("a) Add   b) Update status   c) Remove   d) Back");
             System.out.print("Choose: ");
 
             String c = readInput(sc).toLowerCase();
 
             switch (c) {
-                case "a" -> { handleAddVehicle(sc); return; }
+                case "a" -> {
+                    handleAddVehicle(sc);
+                    return;
+                }
                 case "b" -> {
                     String id = askValidVehicleId(sc);
                     AvailabilityStatus st = askAvailabilityStatus(sc);
                     system.changeAvailability(id, st);
-                    System.out.println("✔ Vehicle status updated.");
+                    printSuccess("Vehicle status updated.");
                     return;
                 }
                 case "c" -> {
                     String id = askValidVehicleId(sc);
                     system.removeVehicle(id);
-                    System.out.println("✔ Vehicle removed.");
+                    printSuccess("Vehicle removed.");
                     return;
                 }
                 case "d" -> { return; }
-                default -> System.out.println("❌ Invalid choice!");
+                default -> printError("Invalid choice! Please select a, b, c, or d.");
             }
         }
     }
@@ -251,20 +330,24 @@ public class ConsoleUI {
     // ADD VEHICLE
     // ============================================================
     private void handleAddVehicle(Scanner sc) {
-        System.out.println();
-        System.out.println("Vehicle Type: 1) HYBRID 2) ELECTRIC 3) LUXURY_SUV 4) COMPACT_PETROL");
+        printSectionTitle("Add new vehicle");
+
+        System.out.println("Vehicle Type:");
+        System.out.println("  1) HYBRID");
+        System.out.println("  2) ELECTRIC");
+        System.out.println("  3) LUXURY_SUV");
+        System.out.println("  4) COMPACT_PETROL");
 
         String t;
-
         while (true) {
             System.out.print("Choose (1-4): ");
             t = readInput(sc);
             if (t.matches("[1-4]")) break;
-            System.out.println("❌ Invalid type!");
+            printError("Invalid type. Please choose 1-4.");
         }
 
         String id = system.generateVehicleId();
-        System.out.println("Assigned Vehicle ID: " + id);
+        System.out.println(GREY + "Assigned Vehicle ID: " + id + RESET);
 
         System.out.print("Model: ");
         String model = readInput(sc);
@@ -301,10 +384,10 @@ public class ConsoleUI {
                 }
             }
 
-            System.out.println("✔ Vehicle added successfully!");
+            printSuccess("Vehicle added successfully! ID: " + id);
 
         } catch (Exception ex) {
-            System.out.println("❌ Invalid input — vehicle not added.");
+            printError("Invalid numeric input — vehicle not added.");
         }
     }
 
@@ -312,8 +395,7 @@ public class ConsoleUI {
     // CATEGORY SELECTOR
     // ============================================================
     private Category askCategory(Scanner sc) {
-        System.out.println();
-        System.out.println("Choose category:");
+        printSectionTitle("Choose vehicle category");
         System.out.println("1) COMPACT_PETROL");
         System.out.println("2) HYBRID");
         System.out.println("3) ELECTRIC");
@@ -339,25 +421,29 @@ public class ConsoleUI {
             String cid = readInput(sc);
 
             if (cid.isBlank()) {
-                System.out.println("❌ NIC / Passport cannot be blank.");
+                printError("NIC / Passport cannot be blank.");
                 continue;
             }
 
             var c = system.findCustomer(cid);
 
             if (c.isPresent()) {
-                System.out.println("✔ Found: " + c.get().getName());
+                System.out.println(GREEN + ICON_USER + " Found: " + c.get().getName() + RESET);
                 return cid;
             }
 
-            System.out.println("❌ Not found.");
+            printError("Customer not found.");
             System.out.println("(R)egister  |  (T)ry again  |  Other: Cancel");
 
             String opt = readInput(sc).toLowerCase();
 
-            if (opt.equals("r")) registerCustomer(sc);
-            else if (opt.equals("t")) continue;
-            else return null;
+            if (opt.equals("r")) {
+                registerCustomer(sc);
+            } else if (opt.equals("t")) {
+                continue;
+            } else {
+                return null;
+            }
         }
     }
 
@@ -366,6 +452,7 @@ public class ConsoleUI {
     // ============================================================
     private AvailabilityStatus askAvailabilityStatus(Scanner sc) {
         while (true) {
+            printSectionTitle("Availability status");
             System.out.println("1) AVAILABLE");
             System.out.println("2) RESERVED");
             System.out.println("3) UNDER_MAINTENANCE");
@@ -374,16 +461,11 @@ public class ConsoleUI {
             String s = readInput(sc);
 
             switch (s) {
-                case "1":
-                    return AvailabilityStatus.AVAILABLE;
-                case "2":
-                    return AvailabilityStatus.RESERVED;
-                case "3":
-                    return AvailabilityStatus.UNDER_MAINTENANCE;
-                default:
-                    // fall through to print invalid choice below
+                case "1": return AvailabilityStatus.AVAILABLE;
+                case "2": return AvailabilityStatus.RESERVED;
+                case "3": return AvailabilityStatus.UNDER_MAINTENANCE;
+                default:  printError("Invalid choice. Please select 1, 2, or 3.");
             }
-            System.out.println("❌ Invalid choice.");
         }
     }
 
@@ -396,7 +478,7 @@ public class ConsoleUI {
         LocalDate d4 = today.plusDays(4);
         LocalDate d5 = today.plusDays(5);
 
-        System.out.println("Choose start date:");
+        printSectionTitle("Start date");
         System.out.println("1) " + d3);
         System.out.println("2) " + d4);
         System.out.println("3) " + d5);
@@ -409,20 +491,18 @@ public class ConsoleUI {
             case "1" -> d3;
             case "2" -> d4;
             case "3" -> d5;
-
             case "4" -> {
-                System.out.print("Enter date: ");
+                System.out.print("Enter date (YYYY-MM-DD): ");
                 LocalDate manual = readDate(sc);
 
                 if (ChronoUnit.DAYS.between(today, manual) < 3) {
-                    System.out.println("⚠ Must book at least 3 days in advance.");
+                    printWarn("Must book at least 3 days in advance.");
                     yield askStartDate(sc);
                 }
                 yield manual;
             }
-
             default -> {
-                System.out.println("Invalid choice.");
+                printError("Invalid choice.");
                 yield askStartDate(sc);
             }
         };
@@ -438,7 +518,7 @@ public class ConsoleUI {
             try {
                 return LocalDate.parse(input);
             } catch (Exception e) {
-                System.out.println("❌ Invalid date format! Expected YYYY-MM-DD.");
+                printError("Invalid date format! Expected YYYY-MM-DD.");
                 System.out.print("Try again: ");
             }
         }
@@ -451,14 +531,11 @@ public class ConsoleUI {
         String cid = askExistingCustomerId(sc);
 
         if (cid == null) {
-            System.out.println("Booking cancelled.");
+            printWarn("Booking cancelled by user.");
             return;
         }
 
-        System.out.println();
-        System.out.println("=============================================");
-        System.out.println("MAKE BOOKING");
-        System.out.println("=============================================");
+        printHeader("MAKE BOOKING", ICON_BOOKING);
 
         System.out.println("Book by → 1) Category   2) Vehicle ID");
         String mode = readInput(sc);
@@ -466,7 +543,7 @@ public class ConsoleUI {
         LocalDate start = askStartDate(sc);
 
         if (ChronoUnit.DAYS.between(LocalDate.now(), start) < 3) {
-            System.out.println("⚠ Minimum 3-day advance required!");
+            printWarn("Minimum 3-day advance required!");
             return;
         }
 
@@ -478,33 +555,40 @@ public class ConsoleUI {
 
         if (mode.equals("1")) {
             Category cat = askCategory(sc);
-            var b = system.bookByCategory(cid, cat, start, days, km);
-            System.out.println("✔ Booked! ID: " + b.getBookingId());
+            Booking b = system.bookByCategory(cid, cat, start, days, km);
+            printSuccess("Booked! Booking ID: " + b.getBookingId());
+            System.out.println(GREY + "Vehicle: " + b.getVehicle().getVehicleId() + " (" + b.getVehicle().getModel() + ")" + RESET);
+            System.out.println(GREY + "Start: " + b.getStartDate() + " | End: " + b.getEndDate() + RESET);
+            System.out.println(GREEN + "Deposit charged: LKR 5000" + RESET);
             return;
         }
 
         // Book by specific vehicle
-        System.out.println("Available vehicles:");
-        system.listVehicles().stream()
+        printSectionTitle("Available vehicles");
+        List<Vehicle> available = system.listVehicles().stream()
                 .filter(v -> v.getAvailabilityStatus() == AvailabilityStatus.AVAILABLE)
                 .sorted(Comparator.comparing(Vehicle::getVehicleId))
-                .forEach(v -> System.out.println(" - " + v.getVehicleId() + " | " + v.getModel()));
+                .toList();
+
+        if (available.isEmpty()) {
+            printWarn("No available vehicles at the moment.");
+            return;
+        }
+
+        printVehicleTable(available);
 
         String vid = askValidVehicleId(sc);
+        Booking b = system.bookSpecific(cid, vid, start, days, km);
 
-        var b = system.bookSpecific(cid, vid, start, days, km);
-
-        System.out.println("✔ Booking complete! ID: " + b.getBookingId());
-        System.out.println("Deposit charged: LKR 5000");
+        printSuccess("Booking complete! ID: " + b.getBookingId());
+        System.out.println(GREEN + "Deposit charged: LKR 5000" + RESET);
     }
 
     // ============================================================
     // UPDATE BOOKING
     // ============================================================
     private void updateBooking(Scanner sc) {
-        System.out.println("=============================================");
-        System.out.println("UPDATE BOOKING");
-        System.out.println("=============================================");
+        printHeader("UPDATE BOOKING", ICON_BOOKING);
 
         String id = askValidBookingId(sc);
 
@@ -520,7 +604,7 @@ public class ConsoleUI {
 
                 long diff = ChronoUnit.DAYS.between(LocalDate.now(), d);
                 if (diff < 3) {
-                    System.out.println("❌ Start date must be at least 3 days ahead.");
+                    printError("Start date must be at least 3 days ahead.");
                     continue;
                 }
 
@@ -528,7 +612,7 @@ public class ConsoleUI {
                 break;
 
             } catch (Exception e) {
-                System.out.println("❌ Invalid date! Format must be YYYY-MM-DD.");
+                printError("Invalid date! Format must be YYYY-MM-DD.");
             }
         }
 
@@ -545,62 +629,54 @@ public class ConsoleUI {
                 dk.isBlank() ? null : Integer.parseInt(dk)
         );
 
-        System.out.println("✔ Booking updated: " + b.getBookingId());
+        printSuccess("Booking updated: " + b.getBookingId());
     }
 
     // ============================================================
     // CANCEL BOOKING
     // ============================================================
     private void cancelBooking(Scanner sc) {
-        System.out.println("=============================================");
-        System.out.println("CANCEL BOOKING");
-        System.out.println("=============================================");
+        printHeader("CANCEL BOOKING", ICON_BOOKING);
 
         String id = askValidBookingId(sc);
-
         system.cancelBooking(id);
 
-        System.out.println("✔ Booking successfully cancelled.");
+        printSuccess("Booking successfully cancelled.");
     }
 
     // ============================================================
     // SEARCH BOOKINGS
     // ============================================================
     private void searchBookings(Scanner sc) {
-        System.out.println("=============================================");
-        System.out.println("SEARCH BOOKING");
-        System.out.println("=============================================");
-        System.out.print("Enter booking ID or customer name: ");
+        printHeader("SEARCH BOOKINGS", "🔍");
 
+        System.out.print("Enter booking ID or customer name: ");
         String q = readInput(sc);
 
-        var list = system.searchBookingsByNameOrId(q);
+        List<Booking> list = system.searchBookingsByNameOrId(q);
 
         if (list.isEmpty()) {
-            System.out.println("No results found.");
-            return;
+            printWarn("No results found.");
+        } else {
+            printBookingTable(list);
         }
-
-        list.forEach(System.out::println);
     }
 
     // ============================================================
     // VIEW BOOKINGS BY DATE
     // ============================================================
     private void viewBookingsByDate(Scanner sc) {
-        System.out.println("=============================================");
-        System.out.println("VIEW BOOKINGS BY DATE");
-        System.out.println("=============================================");
+        printHeader("VIEW BOOKINGS BY DATE", ICON_BOOKING);
 
         System.out.print("Enter date (YYYY-MM-DD): ");
         LocalDate date = readDate(sc);
 
-        var list = system.viewBookingsByDate(date);
+        List<Booking> list = system.viewBookingsByDate(date);
 
         if (list.isEmpty()) {
-            System.out.println("No bookings for " + date);
+            printWarn("No bookings for " + date);
         } else {
-            list.forEach(System.out::println);
+            printBookingTable(list);
         }
     }
 
@@ -608,31 +684,75 @@ public class ConsoleUI {
     // COMPLETE BOOKING
     // ============================================================
     private void completeAndInvoice(Scanner sc) {
-        System.out.println("=============================================");
-        System.out.println("COMPLETE BOOKING");
-        System.out.println("=============================================");
+        printHeader("COMPLETE BOOKING & INVOICE", ICON_INVOICE);
 
         String id = askValidBookingId(sc);
 
         try {
-            var invoice = system.completeAndInvoice(id);
+            Invoice invoice = system.completeAndInvoice(id);
+            // pretty invoice printing – rely on invoice.toString()
             System.out.println(invoice);
 
         } catch (Exception e) {
-            System.out.println("❌ " + e.getMessage());
+            printError(e.getMessage());
         }
     }
 
     // ============================================================
-    // LIST VEHICLES
+    // LIST VEHICLES (TABLE FORMAT)
     // ============================================================
     private void listVehicles() {
         List<Vehicle> vehicles = system.listVehicles();
         vehicles.sort(Comparator.comparing(Vehicle::getVehicleId));
 
-        System.out.println("=============================================");
-        System.out.println("ALL VEHICLES (Sorted by ID)");
-        System.out.println("=============================================");
-        vehicles.forEach(System.out::println);
+        printHeader("ALL VEHICLES (Sorted by ID)", ICON_CAR);
+        if (vehicles.isEmpty()) {
+            printWarn("No vehicles in the system.");
+            return;
+        }
+        printVehicleTable(vehicles);
+    }
+
+    // ============================================================
+    // TABLE HELPERS
+    // ============================================================
+    private void printVehicleTable(List<Vehicle> vehicles) {
+        System.out.printf(
+                NAVY_BLUE + "%-6s %-20s %-15s %-18s%n" + RESET,
+        
+                "ID", "Model", "Category", "Status"
+        );
+        System.out.println(GREY + "----------------------------------------------------------" + RESET);
+
+        for (Vehicle v : vehicles) {
+            System.out.printf(
+                    "%-6s %-20s %-15s %-18s%n",
+                    v.getVehicleId(),
+                    v.getModel(),
+                    v.getCategory(),
+                    v.getAvailabilityStatus()
+            );
+        }
+    }
+
+    private void printBookingTable(List<Booking> list) {
+        System.out.printf(
+                NAVY_BLUE + "%-12s %-18s %-8s %-8s %-12s %-10s%n" + RESET,
+        
+                "Booking ID", "Customer", "Car", "Start", "End", "Status"
+        );
+        System.out.println(GREY + "---------------------------------------------------------------------" + RESET);
+
+        for (Booking b : list) {
+            System.out.printf(
+                    "%-12s %-18s %-8s %-8s %-12s %-10s%n",
+                    b.getBookingId(),
+                    b.getCustomer().getName(),
+                    b.getVehicle().getVehicleId(),
+                    b.getStartDate(),
+                    b.getEndDate(),
+                    b.getStatus()
+            );
+        }
     }
 }

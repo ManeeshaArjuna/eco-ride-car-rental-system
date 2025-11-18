@@ -1,128 +1,330 @@
-@startuml
-' Replace K1234567 with your actual KU student ID before exporting the image
-title EcoRide Car Rental System (UML-aligned to brief)
+@startuml ClassDiagram
+skinparam classAttributeIconSize 0
 
-class K1234567_Category {
-  -name: String
-  -dailyRentalFee: BigDecimal
-  -freeKmPerDay: int
-  -extraKmCharge: BigDecimal
-  -taxRate: BigDecimal
-  +getters()
+' ===================== DOMAIN =====================
+abstract class KU2559603Vehicle {
+  - vehicleId : String
+  - model : String
+  - category : KU2559603Category
+  - availabilityStatus : KU2559603AvailabilityStatus
+  # Vehicle(id : String, model : String, category : KU2559603Category, status : KU2559603AvailabilityStatus)
+  + getVehicleId() : String
+  + getModel() : String
+  + getCategory() : KU2559603Category
+  + getAvailabilityStatus() : KU2559603AvailabilityStatus
+  + setAvailabilityStatus(status : KU2559603AvailabilityStatus) : void
+  + markReserved() : void
+  + markAvailable() : void
 }
 
-enum K1234567_AvailabilityStatus {
+class KU2559603HybridCar {
+  - batteryKWh : double
+  - efficiencyKmPerL : double
+  + KU2559603HybridCar(id : String, model : String, batteryKWh : double, eff : double)
+}
+
+class KU2559603ElectricCar {
+  - batteryKWh : double
+  - chargeTimeHours : double
+  + KU2559603ElectricCar(id : String, model : String, batteryKWh : double, chargeTime : double)
+}
+
+class KU2559603LuxurySUVCar {
+  - features : String
+  - driverIncluded : boolean
+  + KU2559603LuxurySUVCar(id : String, model : String, features : String, driverIncluded : boolean)
+}
+
+class KU2559603CompactPetrolCar {
+  - engineCapacityL : double
+  - transmission : String
+  + KU2559603CompactPetrolCar(id : String, model : String, engineCapL : double, transmission : String)
+}
+
+KU2559603HybridCar --|> KU2559603Vehicle
+KU2559603ElectricCar --|> KU2559603Vehicle
+KU2559603LuxurySUVCar --|> KU2559603Vehicle
+KU2559603CompactPetrolCar --|> KU2559603Vehicle
+
+enum KU2559603Category {
+  COMPACT_PETROL
+  HYBRID
+  ELECTRIC
+  LUXURY_SUV
+}
+
+enum KU2559603AvailabilityStatus {
   AVAILABLE
   RESERVED
   UNDER_MAINTENANCE
 }
 
-enum K1234567_BookingStatus {
+enum KU2559603BookingStatus {
   ACTIVE
-  CANCELLED
   COMPLETED
+  CANCELLED
 }
 
-abstract class K1234567_Vehicle {
-  -vehicleId: String
-  -model: String
-  -category: K1234567_Category
-  -availabilityStatus: K1234567_AvailabilityStatus
-  +checkAvailability(): boolean
-  +markReserved(): void
-  +markAvailable(): void
+KU2559603Vehicle --> KU2559603Category
+KU2559603Vehicle --> KU2559603AvailabilityStatus
+
+abstract class KU2559603Customer {
+  - customerId : String
+  - name : String
+  - contact : String
+  - email : String
+  # KU2559603Customer(id : String, name : String, contact : String, email : String)
+  + getCustomerId() : String
+  + getName() : String
+  + getContact() : String
+  + getEmail() : String
+  + setName(name : String) : void
+  + setContact(contact : String) : void
+  + setEmail(email : String) : void
 }
 
-class K1234567_HybridCar extends K1234567_Vehicle {
-  -batteryCapacity: double
-  -fuelEfficiency: double
-  +displayHybridDetails(): void
+class KU2559603LocalCustomer {
+  + KU2559603LocalCustomer(nic : String, name : String, contact : String, email : String)
 }
 
-class K1234567_ElectricCar extends K1234567_Vehicle {
-  -batteryCapacity: double
-  -chargingTime: double
-  +displayElectricDetails(): void
+class KU2559603ForeignCustomer {
+  - nationality : String
+  + KU2559603ForeignCustomer(passport : String, nationality : String, name : String, contact : String, email : String)
 }
 
-class K1234567_LuxurySUVCar extends K1234567_Vehicle {
-  -luxuryFeatures: String
-  -driverIncluded: boolean
-  +displayLuxuryDetails(): void
+KU2559603LocalCustomer --|> KU2559603Customer
+KU2559603ForeignCustomer --|> KU2559603Customer
+
+class KU2559603Booking {
+  - bookingId : String
+  - bookingDate : LocalDateTime
+  - startDate : LocalDate
+  - endDate : LocalDate
+  - totalKm : int
+  - deposit : BigDecimal
+  - status : KU2559603BookingStatus
+  - customer : KU2559603Customer
+  - vehicle : KU2559603Vehicle
+  + KU2559603Booking(id : String, bookingDate : LocalDateTime, start : LocalDate, end : LocalDate, totalKm : int, deposit : BigDecimal, status : KU2559603BookingStatus, customer : KU2559603Customer, vehicle : KU2559603Vehicle)
+  + getBookingId() : String
+  + getCustomer() : KU2559603Customer
+  + getVehicle() : KU2559603Vehicle
+  + getStatus() : KU2559603BookingStatus
+  + getStartDate() : LocalDate
+  + rentalDays() : int
+  + freeKmTotal() : int
+  + calculateBasePrice() : BigDecimal
+  + calculateExtraKmCharge() : BigDecimal
+  + calculateDiscount() : BigDecimal
+  + calculateTax() : BigDecimal
+  + calculateFinalAmount() : BigDecimal
+  + complete() : void
+  + cancelBooking() : void
 }
 
-abstract class K1234567_Customer {
-  -customerId: String  <<NIC/Passport>>
-  -name: String
-  -contact: String
-  -email: String
+KU2559603Booking --> KU2559603Customer : customer
+KU2559603Booking --> KU2559603Vehicle : vehicle
+KU2559603Booking --> KU2559603BookingStatus
+
+class KU2559603Invoice {
+  - invoiceId : String
+  - createdAt : LocalDateTime
+  - booking : KU2559603Booking
+  - basePrice : BigDecimal
+  - extraKmCharge : BigDecimal
+  - discount : BigDecimal
+  - tax : BigDecimal
+  - depositDeducted : BigDecimal
+  - finalPayable : BigDecimal
+  + KU2559603Invoice(booking : KU2559603Booking)
+  + getFinalPayable() : BigDecimal
+  + toString() : String
 }
 
-class K1234567_LocalCustomer extends K1234567_Customer {
-  -nicNumber: String
-  +verifyNIC(): boolean
+KU2559603Invoice --> KU2559603Booking : booking
+
+class KU2559603Payment {
+  - paymentId : String
+  - amount : BigDecimal
+  - method : String
+  - status : String
+  + KU2559603Payment(id : String, amount : BigDecimal, method : String, status : String)
+  + getPaymentId() : String
+  + getAmount() : BigDecimal
+  + getMethod() : String
+  + getStatus() : String
 }
 
-class K1234567_ForeignCustomer extends K1234567_Customer {
-  -passportNumber: String
-  -nationality: String
-  +verifyPassport(): boolean
+class KU2559603Admin {
+  - adminId : String
+  - name : String
+  + KU2559603Admin(adminId : String, name : String)
+  + getAdminId() : String
+  + getName() : String
+  + addVehicle(system : KU2559603CarRentalSystem, v : KU2559603Vehicle) : void
+  + updateVehicle(system : KU2559603CarRentalSystem, v : KU2559603Vehicle) : void
+  + removeVehicle(system : KU2559603CarRentalSystem, id : String) : void
+  + changeAvailability(system : KU2559603CarRentalSystem, id : String, st : KU2559603AvailabilityStatus) : void
 }
 
-class K1234567_Booking {
-  -bookingId: String
-  -bookingDate: LocalDateTime
-  -startDate: LocalDate
-  -endDate: LocalDate
-  -totalKm: int
-  -deposit: BigDecimal
-  -status: K1234567_BookingStatus
-  +rentalDays(): int
-  +calculateBasePrice(): BigDecimal
-  +calculateExtraKmCharge(): BigDecimal
-  +calculateDiscount(): BigDecimal
-  +calculateTax(): BigDecimal
-  +calculateFinalAmount(): BigDecimal
-  +confirmBooking(): void
-  +cancelBooking(): void
+KU2559603Admin --> KU2559603CarRentalSystem
+KU2559603Admin --> KU2559603Vehicle
+
+' ===================== SERVICE / UTIL =====================
+class KU2559603CarRentalSystem {
+  - vehicleRepo : KU2559603VehicleRepository
+  - customerRepo : KU2559603CustomerRepository
+  - bookingRepo : KU2559603BookingRepository
+  - policy : KU2559603BookingPolicy
+  - adminUsers : Map<String,String>
+  + KU2559603CarRentalSystem(vRepo, cRepo, bRepo, policy, pricing)
+  + addAdmin(id : String, pwd : String) : void
+  + authenticateAdmin(id : String, pwd : String) : boolean
+  + seedAdmins() : void
+  + addVehicle(v : KU2559603Vehicle) : void
+  + updateVehicle(v : KU2559603Vehicle) : void
+  + removeVehicle(id : String) : void
+  + listVehicles() : List<KU2559603Vehicle>
+  + changeAvailability(id : String, status : KU2559603AvailabilityStatus) : void
+  + listAvailableByCategory(cat : KU2559603Category) : List<KU2559603Vehicle>
+  + addCustomer(c : KU2559603Customer) : void
+  + findCustomer(id : String) : Optional<KU2559603Customer>
+  + searchCustomersByName(name : String) : List<KU2559603Customer>
+  + bookByCategory(customerId : String, category : KU2559603Category, start : LocalDate, days : int, totalKm : int) : KU2559603Booking
+  + bookSpecific(customerId : String, vehicleId : String, start : LocalDate, days : int, totalKm : int) : KU2559603Booking
+  + updateBooking(id : String, newStart : LocalDate, newDays : Integer, newTotalKm : Integer) : KU2559603Booking
+  + cancelBooking(id : String) : void
+  + completeAndInvoice(id : String) : KU2559603Invoice
+  + findBookingById(id : String) : Optional<KU2559603Booking>
+  + searchBookingsByNameOrId(q : String) : List<KU2559603Booking>
+  + viewBookingsByDate(d : LocalDate) : List<KU2559603Booking>
+  + generateVehicleId() : String
+  + seedVehicles() : void
 }
 
-class K1234567_Invoice {
-  -invoiceId: String
-  -createdAt: LocalDateTime
-  -basePrice: BigDecimal
-  -extraKmCharge: BigDecimal
-  -discount: BigDecimal
-  -tax: BigDecimal
-  -depositDeducted: BigDecimal
-  -finalPayable: BigDecimal
-  +toString(): String
+class KU2559603BookingPolicy {
+  + ensureCanBook(v : KU2559603Vehicle, start : LocalDate) : void
+  + ensureCanAmendOrCancel(b : KU2559603Booking) : void
 }
 
-class K1234567_Payment {
-  -paymentId: String
-  -amount: BigDecimal
-  -method: String
-  -status: String
-  +processPayment(): boolean
-  +processRefund(): boolean
+class KU2559603PricingService {
+  + basePrice(b : KU2559603Booking) : BigDecimal
+  + extraKmCharge(b : KU2559603Booking) : BigDecimal
+  + discount(b : KU2559603Booking) : BigDecimal
+  + tax(b : KU2559603Booking) : BigDecimal
+  + finalPayable(b : KU2559603Booking) : BigDecimal
 }
 
-class K1234567_CarRentalSystem {
-  -vehicles: List<K1234567_Vehicle>
-  -customers: List<K1234567_Customer>
-  -bookings: List<K1234567_Booking>
-  +addVehicle(v: K1234567_Vehicle): void
-  +addCustomer(c: K1234567_Customer): void
-  +addBooking(b: K1234567_Booking): void
-  +findBookingById(id: String): K1234567_Booking
-  +searchBookingsByNameOrId(q: String): List<K1234567_Booking>
-  +viewBookingsByDate(d: LocalDate): List<K1234567_Booking>
-  +generateInvoice(b: K1234567_Booking): K1234567_Invoice
+class KU2559603IdGenerator {
+  + shortId() : String
 }
 
-K1234567_Booking "1" --> "1" K1234567_Customer
-K1234567_Booking "1" --> "1" K1234567_Vehicle
-K1234567_Invoice "1" --> "1" K1234567_Booking
+KU2559603CarRentalSystem --> KU2559603VehicleRepository
+KU2559603CarRentalSystem --> KU2559603CustomerRepository
+KU2559603CarRentalSystem --> KU2559603BookingRepository
+KU2559603CarRentalSystem --> KU2559603BookingPolicy
+KU2559603CarRentalSystem --> KU2559603PricingService
+KU2559603CarRentalSystem --> KU2559603Booking
+KU2559603CarRentalSystem --> KU2559603Invoice
+
+KU2559603BookingPolicy --> KU2559603Booking
+KU2559603BookingPolicy --> KU2559603Vehicle
+
+KU2559603PricingService --> KU2559603Booking
+
+KU2559603IdGenerator ..> KU2559603Booking
+
+' ===================== REPOSITORIES =====================
+interface KU2559603VehicleRepository {
+  + save(v : KU2559603Vehicle) : void
+  + findById(id : String) : Optional<KU2559603Vehicle>
+  + findAll() : List<KU2559603Vehicle>
+  + delete(id : String) : void
+  + findAvailableByCategory(c : KU2559603Category) : List<KU2559603Vehicle>
+}
+
+class KU2559603InMemoryVehicleRepository {
+  - data : Map<String, KU2559603Vehicle>
+  + save(v : KU2559603Vehicle) : void
+  + findById(id : String) : Optional<KU2559603Vehicle>
+  + findAll() : List<KU2559603Vehicle>
+  + delete(id : String) : void
+  + findAvailableByCategory(c : KU2559603Category) : List<KU2559603Vehicle>
+}
+
+KU2559603InMemoryVehicleRepository ..|> KU2559603VehicleRepository
+KU2559603InMemoryVehicleRepository --> KU2559603Vehicle
+
+interface KU2559603CustomerRepository {
+  + save(c : KU2559603Customer) : void
+  + findById(id : String) : Optional<KU2559603Customer>
+  + findAll() : List<KU2559603Customer>
+  + findByNameContains(name : String) : List<KU2559603Customer>
+}
+
+class KU2559603InMemoryCustomerRepository {
+  - data : Map<String, KU2559603Customer>
+  + save(c : KU2559603Customer) : void
+  + findById(id : String) : Optional<KU2559603Customer>
+  + findAll() : List<KU2559603Customer>
+  + findByNameContains(name : String) : List<KU2559603Customer>
+}
+
+KU2559603InMemoryCustomerRepository ..|> KU2559603CustomerRepository
+KU2559603InMemoryCustomerRepository --> KU2559603Customer
+
+interface KU2559603BookingRepository {
+  + save(b : KU2559603Booking) : void
+  + findById(id : String) : Optional<KU2559603Booking>
+  + findAll() : List<KU2559603Booking>
+  + delete(id : String) : void
+  + findByDate(date : LocalDate) : List<KU2559603Booking>
+}
+
+class KU2559603InMemoryBookingRepository {
+  - data : Map<String, KU2559603Booking>
+  + save(b : KU2559603Booking) : void
+  + findById(id : String) : Optional<KU2559603Booking>
+  + findAll() : List<KU2559603Booking>
+  + delete(id : String) : void
+  + findByDate(date : LocalDate) : List<KU2559603Booking>
+}
+
+KU2559603InMemoryBookingRepository ..|> KU2559603BookingRepository
+KU2559603InMemoryBookingRepository --> KU2559603Booking
+
+' ===================== CLI & APP =====================
+class KU2559603ConsoleUI {
+  - system : KU2559603CarRentalSystem
+  + KU2559603ConsoleUI(system : KU2559603CarRentalSystem)
+  + start() : void
+  - registerCustomer(sc : Scanner) : void
+  - vehicleManagement(sc : Scanner) : void
+  - makeBooking(sc : Scanner) : void
+  - updateBooking(sc : Scanner) : void
+  - cancelBooking(sc : Scanner) : void
+  - searchBookings(sc : Scanner) : void
+  - viewBookingsByDate(sc : Scanner) : void
+  - completeAndInvoice(sc : Scanner) : void
+  - listVehicles() : void
+}
+
+KU2559603ConsoleUI --> KU2559603CarRentalSystem
+KU2559603ConsoleUI --> KU2559603Booking
+KU2559603ConsoleUI --> KU2559603Vehicle
+KU2559603ConsoleUI --> KU2559603Category
+KU2559603ConsoleUI --> KU2559603AvailabilityStatus
+
+class KU2559603App {
+  + main(args : String[]) : void
+}
+
+KU2559603App --> KU2559603ConsoleUI
+KU2559603App --> KU2559603CarRentalSystem
+KU2559603App --> KU2559603VehicleRepository
+KU2559603App --> KU2559603CustomerRepository
+KU2559603App --> KU2559603BookingRepository
+KU2559603App --> KU2559603BookingPolicy
+KU2559603App --> KU2559603PricingService
 
 @enduml
